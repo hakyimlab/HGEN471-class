@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.450">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2023-01-05">
+
+<title>Lab 0: Introduction to Statistical Computing Languages</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="lab_0_files/libs/clipboard/clipboard.min.js"></script>
+<script src="lab_0_files/libs/quarto-html/quarto.js"></script>
+<script src="lab_0_files/libs/quarto-html/popper.min.js"></script>
+<script src="lab_0_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="lab_0_files/libs/quarto-html/anchor.min.js"></script>
+<link href="lab_0_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="lab_0_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="lab_0_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="lab_0_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="lab_0_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Lab 0: Introduction to Statistical Computing Languages</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">midway</div>
+    <div class="quarto-category">local</div>
+    <div class="quarto-category">Posit cloud</div>
+  </div>
+  </div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">January 5, 2023</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><em>Created by Max Winston with contributions from Charles Washington III, Ankeeta Shah, Yanyu Liang, Erik McIntire, and Jing Gu</em></p>
+<p><em>Modified by Ethan Zhong for Winter 2023</em></p>
+<p><em>Modified by Temi Adeluwa for Winter 2024</em></p>
+</div>
+</div>
+<section id="introduction" class="level1">
+<h1>Introduction</h1>
+<p>This class is designed to introduce a variety of concepts, methods, and tools utilized in statistical genetics. The majority of tools used to employ these methods and concepts require knowledge of computing languages, specifically Unix and R. Some of you may be familiar with many of these concepts. If so, please stay behind to help you classmates. You will get participation credit :)</p>
+<p>In today’s lab, we will cover the basic syntax of these languages and some basic commands necessary for operating statistical genetics programs. Here are some additional resources for your reference -</p>
+<p>Unix:<br>
+http://www.ee.surrey.ac.uk/Teaching/Unix/<br>
+https://programminghistorian.org/en/lessons/intro-to-bash<br>
+</p>
+<p>R:<br>
+https://datasciencebook.ca/<br>
+http://rafalab.dfci.harvard.edu/dsbook/<br>
+https://r4ds.hadley.nz/<br>
+</p>
+<p>By the end of this lab, you should understand how to perform the following:</p>
+<ul>
+<li><strong>Navigate in R and Unix</strong></li>
+<li><strong>Download and install software packages in Unix</strong></li>
+<li><strong>Write looped bash commands to run in Unix</strong></li>
+<li><strong>Manipulate large text files in Unix</strong></li>
+<li><strong>Import data files into R</strong></li>
+<li><strong>Manipulate and visualize files in R</strong></li>
+</ul>
+</section>
+<section id="midway3-and-posit-cloud" class="level1">
+<h1>Midway3 and Posit Cloud</h1>
+<p>We will be using Midway3 and Posit Cloud (formerly RStudio Cloud) for computer labs this quarter.</p>
+<p>After joining the StatGen2024 workspace on Posit Cloud, click on <strong>Lab-00-Intro-Computing</strong>. This should create a private project for you to follow today’s lab.</p>
+<p>Click on Terminal and check the files in your directory. What do you see?</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>There is also a panel at the bottom right of your RStudio interface, which shows the files stored in your current directory. Click on lab_0.Rmd. You can copy and run the code in terminal to follow the lab.</p>
+</section>
+<section id="commonly-used-commands-in-unix" class="level1">
+<h1>Commonly used commands in Unix</h1>
+<section id="list-of-basic-commands" class="level2">
+<h2 class="anchored" data-anchor-id="list-of-basic-commands">List of Basic Commands</h2>
+<table class="table">
+<colgroup>
+<col style="width: 16%">
+<col style="width: 83%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>pwd</strong></td>
+<td>Print working directory (tells you where you are)</td>
+</tr>
+<tr class="even">
+<td><strong>cd</strong></td>
+<td>Change directory</td>
+</tr>
+<tr class="odd">
+<td><strong>mkdir</strong></td>
+<td>Make directory</td>
+</tr>
+<tr class="even">
+<td><strong>ls</strong></td>
+<td>List information about files</td>
+</tr>
+<tr class="odd">
+<td><strong>mv</strong></td>
+<td>Moves or renames files or directories</td>
+</tr>
+<tr class="even">
+<td><strong>rm</strong></td>
+<td>Deletes files (can remove directories with -rf)</td>
+</tr>
+<tr class="odd">
+<td><strong>cp</strong></td>
+<td>Copy a file to a new location (can copy directories with -r)</td>
+</tr>
+<tr class="even">
+<td><strong>scp</strong></td>
+<td>Secure copy a file (for transferring files between a remote server and local system)</td>
+</tr>
+<tr class="odd">
+<td><strong>cat</strong></td>
+<td>Concatenate and print the content of files to screen</td>
+</tr>
+<tr class="even">
+<td><strong>sed</strong></td>
+<td>Stream editor (for searching, finding, and replacing text)</td>
+</tr>
+<tr class="odd">
+<td><strong>“pipe”</strong></td>
+<td>Uses the output of one command as the input for another</td>
+</tr>
+<tr class="even">
+<td><strong>&gt;</strong></td>
+<td>Writes output into file (must enter file name after, will overwrite)</td>
+</tr>
+<tr class="odd">
+<td><strong>&gt;&gt;</strong></td>
+<td>Writes output into file (must enter file name, will append, not overwrite)</td>
+</tr>
+<tr class="even">
+<td><strong>curl</strong></td>
+<td>Transfer a URL (downloads something from the Internet)</td>
+</tr>
+<tr class="odd">
+<td><strong>wget</strong></td>
+<td>Transfer a URL (downloads something from the Internet)</td>
+</tr>
+<tr class="even">
+<td><strong>tar</strong></td>
+<td>Creates tape archives and adds or extracts files</td>
+</tr>
+<tr class="odd">
+<td><strong>ssh</strong></td>
+<td>Remote log-in command (Secure Shell client)</td>
+</tr>
+<tr class="even">
+<td><strong>emacs</strong></td>
+<td>Opens emacs text editor</td>
+</tr>
+<tr class="odd">
+<td><strong>vim</strong></td>
+<td>Opens vim text editor</td>
+</tr>
+<tr class="even">
+<td><strong>nano</strong></td>
+<td>Opens nano text editor</td>
+</tr>
+<tr class="odd">
+<td><strong>man</strong></td>
+<td>Access manual for any command (exit = q)</td>
+</tr>
+<tr class="even">
+<td><strong>top</strong></td>
+<td>Observe computer’s tasks</td>
+</tr>
+<tr class="odd">
+<td><strong>sort</strong></td>
+<td>Sorts a file (extensive options to direct this command)</td>
+</tr>
+<tr class="even">
+<td><strong>head</strong></td>
+<td>Look at the first ten lines of file (useful for large files)</td>
+</tr>
+<tr class="odd">
+<td><strong>tail</strong></td>
+<td>Look at the last ten lines of file (useful for large files)</td>
+</tr>
+<tr class="even">
+<td><strong>./</strong></td>
+<td>Existing directory (not a command)</td>
+</tr>
+<tr class="odd">
+<td><strong>../</strong></td>
+<td>Directory contaiing existing directory (not a command)</td>
+</tr>
+<tr class="even">
+<td><strong>grep</strong></td>
+<td>Prints lines matching a pattern (helpful for manipulating large files)</td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 75%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>SLURM specifics</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>sbatch</strong></td>
+<td>Submits a job to the server</td>
+</tr>
+<tr class="even">
+<td><strong>sinterative</strong></td>
+<td>Submits an interactive job to the server (Our labs will use it a lot)</td>
+</tr>
+<tr class="odd">
+<td><strong>squeue</strong></td>
+<td>Status of a job you’ve submitted to the server</td>
+</tr>
+</tbody>
+</table>
+<p>SLURM is the job scheduler for Midway server. Check out the Midway User Guide for more information: https://rcc.uchicago.edu/docs/using-midway/index.html. We won’t get on Midway for today’s lab.</p>
+<section id="tab-completion" class="level3">
+<h3 class="anchored" data-anchor-id="tab-completion">Tab-Completion</h3>
+<p>Tab completion is helpful for both speed and accuracy. The following exercise will demonstrate this:</p>
+<ul>
+<li><ol type="1">
+<li><strong>Make a directory with a really long name.</strong></li>
+</ol></li>
+<li><ol start="2" type="1">
+<li><strong>Start typing the name of the directory.</strong></li>
+</ol></li>
+<li><ol start="3" type="1">
+<li><strong>Hit tab.</strong> The directory should complete itself.</li>
+</ol></li>
+<li><ol start="4" type="1">
+<li><strong>Move back into the previous directory.</strong></li>
+</ol></li>
+<li><ol start="5" type="1">
+<li><strong>Start typing the name of the directory, intentionally introducing an error.</strong></li>
+</ol></li>
+<li><ol start="6" type="1">
+<li><strong>Hit tab.</strong> Notice nothing happens, this indicates you’ve made an error.</li>
+</ol></li>
+<li><ol start="7" type="1">
+<li><strong>Remove this directory using tab completion.</strong> DO NOT use rm -r unless you are 100% confident with what you are doing.</li>
+</ol></li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> never_create_a_directory_like_this/                       <span class="co">##Step 1</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> never_                                                       <span class="co">##Step 2</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">[tab,</span> then enter]                                               <span class="co">##Step 3</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ..                                                           <span class="co">##Step 4</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> nver_                                                        <span class="co">##Step 5</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="ex">[tab]</span>                                                           <span class="co">##Step 6</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-r</span> never_[tab, then enter]                                   <span class="co">##Step 7</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="downloading-and-unpacking-files-and-programs" class="level2">
+<h2 class="anchored" data-anchor-id="downloading-and-unpacking-files-and-programs">Downloading and unpacking files and programs</h2>
+<p>Frequently, you may need files or programs that are not already installed on your computer or server. Often these files are compressed, and often these files are in ‘tarballs’, which have the extension .tgz. IMPUTE2 is a program we’ll use later in the quarter, so let’s download and unpack it:</p>
+<ul>
+<li><ol type="1">
+<li><strong>Download the IMPUTE2 tarball from the internet</strong>. Here we download the tarball and write it into the <em>impute2.tgz</em> file</li>
+</ol></li>
+<li><ol start="2" type="1">
+<li><strong>Unpack the tarball</strong>.</li>
+</ol></li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">##Step 1</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> https://mathgen.stats.ox.ac.uk/impute/impute_v2.3.2_x86_64_static.tgz <span class="op">&gt;</span> impute2.tgz     </span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">##Step 2</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="fu">tar</span> <span class="at">-zxvf</span> impute2.tgz                                                                                 </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Once a program is unpacked, generally there is a README file that you can open with a text editor command (emacs/nano/vim/etc.), however, every program is different, and reading the manual is the only sure way to install the program correctly.</p>
+</section>
+<section id="manipulating-text-files" class="level2">
+<h2 class="anchored" data-anchor-id="manipulating-text-files">Manipulating text files</h2>
+<p>Often you may have a large text file that you want to manipulate in some way. Using a variety of commands in combination is usually the most effective way to do this, and the “pipe” command allows for a more condense syntax where you use the output of one command as the input for the next.</p>
+<p>As a quick example, we will use a file from the IMPUTE2 directory. Specifically, the mapping file provides a fine-scale recombination map with three columns: (1) physical position (in base pairs), (2) recombination rate between current position and next position in map (in cM/Mb), (3) and genetic map position (in cM). Since you may be interested in the physical positions with the greatest recombination rates, we can easily get a list of the top ten using the following:</p>
+<ul>
+<li><ol type="1">
+<li><strong>Change to the Example directory.</strong></li>
+</ol></li>
+<li><ol start="2" type="1">
+<li><strong>Manipulate the mapping file to create top ten list.</strong> We will name this <em>“top_ten.map”</em>.</li>
+</ol></li>
+<li><ol start="3" type="1">
+<li><strong>Rename the file.</strong> <em>“top_ten.map”</em> is not as informative as <em>“top_ten_recomb.map”</em>.</li>
+</ol></li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> impute_v2.3.2_x86_64_static/Example/                       <span class="co">##Step 1</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> example.chr22.map <span class="kw">|</span> <span class="fu">sort</span> <span class="at">-k2nr</span> <span class="kw">|</span> <span class="fu">head</span> <span class="op">&gt;</span> top_ten.map       <span class="co">##Step 2</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">mv</span> top_ten.map top_ten_recomb.map                             <span class="co">##Step 3</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="writing-bash-scripts" class="level2">
+<h2 class="anchored" data-anchor-id="writing-bash-scripts">Writing bash scripts</h2>
+<p>Having the capability to write bash scripts which can be run in the Unix environment is critical, especially for running replicates or collating results from a command-line program. We will write a bash script using the vim text editor, and then run it. Alternatively, feel free to use your own text editor (emacs, textwrangler, etc.) to write the script below. Please start with the following:</p>
+<ul>
+<li><ol type="1">
+<li><strong>Create a new script file</strong> We will name ours test.sh</li>
+</ol></li>
+<li><ol start="2" type="1">
+<li><strong>Add path to bash interpreter at the top of the file</strong></li>
+</ol></li>
+<li><ol start="3" type="1">
+<li><strong>Write a for-loop to append 5 numbers under top_ten_recomb.map</strong></li>
+</ol></li>
+<li><ol start="4" type="1">
+<li><strong>Save and exit</strong></li>
+</ol></li>
+<li><ol start="5" type="1">
+<li><strong>Run script</strong></li>
+</ol></li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">vim</span> test.sh                                                       <span class="co">##Step 1  </span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="ex">[now</span> in vim, type <span class="st">"i"</span> to allow you to insert text]  </span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/bash                                                       ##Step 2</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> j <span class="kw">in</span> <span class="dt">{</span><span class="dv">1</span><span class="dt">..</span><span class="dv">5</span><span class="dt">}</span>                                                   <span class="co">##Step 3</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="cf">do</span>                                                                <span class="co">##Step 3</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="va">$j</span> <span class="op">&gt;&gt;</span> top_ten_recomb.map                                 <span class="co">##Step 3</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span>                                                              <span class="co">##Step 3</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>                                                                  <span class="co">##Step 4</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="ex">[exit</span> vim by first pressing <span class="st">"Esc"</span> and then <span class="st">":wq"</span> to save and quit <span class="er">(</span><span class="ex">use</span> :q! to quit without saving any changes you made<span class="kw">)</span><span class="ex">]</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> test.sh                                                      <span class="co">##Step 5</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="basic-commands-in-r" class="level1">
+<h1>Basic commands in R</h1>
+<p>R is used widely for scientific computing, however, the syntax is notably different than Unix. Specifically, two of the most visible differences are that variables are usually assigned with the assignment operator (&lt;-) operator, although you can use the equal to (=) also, and functions are applied using parentheses. While R can be accessed and R scripts can be run within the Unix environment, it is often preferable to operate R within the graphical user interface (GUI) known as RStudio. Unlike many poorly made GUIs that offer little advantage to a Unix environment, RStudio offers many organizational and functional benefits.</p>
+<section id="paths-in-r" class="level2">
+<h2 class="anchored" data-anchor-id="paths-in-r">Paths in R</h2>
+<p>Paths are very important; they tell the computer where to look for files or folders. Usually, we will have to tell the computer where to look for files. We do this by giving it a path. Paths can be relative or absolute:</p>
+<ul>
+<li>relative paths go from where your script is located i.e.&nbsp;the current directory, and from there finds its way to other locations.</li>
+<li>absolute paths go from the root directory of the computer to other locations.</li>
+</ul>
+<p>For reproducibility, especially when sharing scripts with friends or collaborators, relative paths are preferred.</p>
+<p>In R, you can check your current working directory (to figure out where you are) by doing</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">getwd</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Then you can set or change your location</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># you should change this</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">setwd</span>(<span class="st">'/Users/temidayoadeluwa/Dropbox/phd_journey/Year-three/HGEN471-class'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Alternatively, you can define a variable that you will consistently use as a path.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>myWorkingFolder <span class="ot">&lt;-</span> <span class="st">'/Users/temidayoadeluwa/Dropbox/phd_journey/Year-three/HGEN471-class'</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Then you can use this to navigate to different locations relatively e.g.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">file.path</span>(myWorkingFolder, <span class="st">'data'</span>, <span class="st">'lab_0'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The idea here is that we construct the string to the path such that every argument is a directory until the last one, which may be a file, or directory.</p>
+</section>
+<section id="pipes-in-r" class="level2">
+<h2 class="anchored" data-anchor-id="pipes-in-r">Pipes in R</h2>
+<p>Let us assume want to migrate to a folder, and count the number of files in the folder. In R, you would do something such as <code>length(list.files(file.path(myWorkingFolder, 'data', 'lab_0')))</code>.</p>
+<p>Run this to see what it returns. ::: {.cell}</p>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">list.files</span>(<span class="fu">file.path</span>(myWorkingFolder, <span class="st">'data'</span>, <span class="st">'lab_0'</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>:::</p>
+<p>If you intend to do many more complex processes, you may lose sight of what parameters or parenthesis go where. In this case, you may pipe the output of one function into the next by using the native R’s <code>|&gt;</code>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">file.path</span>(myWorkingFolder, <span class="st">'data'</span>, <span class="st">'lab_0'</span>) <span class="sc">|&gt;</span> <span class="fu">list.files</span>() <span class="sc">|&gt;</span> <span class="fu">length</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>There is another more sophisticated pipe, the {magrittr} pipe <code>%&gt;%</code>, which is much better and easier to use. This is <a href="https://ivelasq.rbind.io/blog/understanding-the-r-pipe/">a great blog to read</a> on the pipe operators in general.</p>
+</section>
+<section id="reading-in-data-files" class="level2">
+<h2 class="anchored" data-anchor-id="reading-in-data-files">Reading in data files</h2>
+<p>Although data can be simulated, generated, and analyzed all within R, often we may want to visualize or analyze data from some other source. We can learn R syntax by learning how to import new data.</p>
+<p>There are a number of packages and functions that help with reading data in R including <code>utils::read.csv</code>, <code>utils::read.table</code>, <code>data.table::fread</code>, e.t.c.</p>
+<p>The functions from utils are fine for small files. When the size of a file gets big, some packages such as data.table offer more sophisticated functions that can read the data very fast.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># remember that we need to tell R where to look for the data</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>new_data <span class="ot">&lt;-</span> <span class="fu">read.table</span>(<span class="fu">file.path</span>(myWorkingFolder, <span class="st">'data'</span>, <span class="st">'lab_0_r_data.txt'</span>), <span class="at">header =</span> T)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>As a side note, when importing large genetic dataset into R, we rarely use read.table (too slow!). Instead, we use fread from data.table library. We will also time the different code blocks.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># install.packages(c("data.table", "R.utils"))</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(data.table)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<ul>
+<li>using utils::read.table</li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>start_time <span class="ot">&lt;-</span> <span class="fu">Sys.time</span>()</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>temp <span class="ot">&lt;-</span> <span class="fu">read.table</span>(<span class="fu">file.path</span>(myWorkingFolder, <span class="st">'data'</span>, <span class="st">'gwas_chr1_chr2.txt.gz'</span>), <span class="at">header =</span> T)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>end_time <span class="ot">&lt;-</span> <span class="fu">Sys.time</span>()</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(temp)</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="fu">gc</span>()</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>end_time <span class="sc">-</span> start_time</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<ul>
+<li>using data.table::fread</li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>start_time <span class="ot">&lt;-</span> <span class="fu">Sys.time</span>()</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>temp <span class="ot">&lt;-</span> <span class="fu">fread</span>(<span class="fu">file.path</span>(myWorkingFolder, <span class="st">'data'</span>, <span class="st">'gwas_chr1_chr2.txt.gz'</span>), <span class="at">header =</span> T)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>end_time <span class="ot">&lt;-</span> <span class="fu">Sys.time</span>()</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(temp)</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="fu">gc</span>()</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>end_time <span class="sc">-</span> start_time</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="exploring-objects-functions-and-packages" class="level2">
+<h2 class="anchored" data-anchor-id="exploring-objects-functions-and-packages">Exploring objects, functions, and packages</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(new_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(new_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Here we can see that the dimensions of new_data are 16 rows and 2 columns, and that it is in data frame format. This is important to know since different functions apply differently to different classes, which may cause errors. While dim and class can be used to explore objects, you may want to explore these functions themselves. This is done by this simple syntax:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>?dim</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>?class</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Notice that both dim and class are relatively simple functions with few arguments, so you probably won’t have to read the documentation much for either function. As you start invoking more complicated functions (which is inevitable in statistical genetics research), you will spend a lot of time reading the documentation.</p>
+</section>
+<section id="list-of-basic-classes-and-functions" class="level2">
+<h2 class="anchored" data-anchor-id="list-of-basic-classes-and-functions">List of basic classes and functions</h2>
+<table class="table">
+<colgroup>
+<col style="width: 16%">
+<col style="width: 83%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Class</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>numeric</strong></td>
+<td>Object is numeric (interger or double)</td>
+</tr>
+<tr class="even">
+<td><strong>integer</strong></td>
+<td>Object is integer (not double)</td>
+</tr>
+<tr class="odd">
+<td><strong>double</strong></td>
+<td>Object is double</td>
+</tr>
+<tr class="even">
+<td><strong>character</strong></td>
+<td>Object is not numeric, composed of characters</td>
+</tr>
+<tr class="odd">
+<td><strong>vector</strong></td>
+<td>One-dimensional, can contain numeric or characters</td>
+</tr>
+<tr class="even">
+<td><strong>matrix</strong></td>
+<td>Two-dimensional, can contain numeric or characters</td>
+</tr>
+<tr class="odd">
+<td><strong>array</strong></td>
+<td>Multi-dimensional, can contain numeric or characters</td>
+</tr>
+<tr class="even">
+<td><strong>data frame</strong></td>
+<td>A list of vectors of equal lenght, each vector contains same class</td>
+</tr>
+<tr class="odd">
+<td><strong>list</strong></td>
+<td>A list of various generic vectors</td>
+</tr>
+</tbody>
+</table>
+<p>Functions are how you execute your commands and write your scripts. It is critical to ensure the arguments are of the correct class (read documentation), as most user-errors originate from providing data in the inappropriate class or dimension.</p>
+<table class="table">
+<colgroup>
+<col style="width: 16%">
+<col style="width: 83%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Function</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>c(1,2,3)</strong></td>
+<td>Concatenate <em>numbers</em> into a vector</td>
+</tr>
+<tr class="even">
+<td><strong>c(1:10</strong></td>
+<td>Concatenate from <em>number</em> 1 to <em>number</em> 10 in a vector</td>
+</tr>
+<tr class="odd">
+<td><strong>c(“a”,“b”,“c”)</strong></td>
+<td>Concatenate <em>characters</em> into a vector</td>
+</tr>
+<tr class="even">
+<td><strong>cbind(x,y,z)</strong></td>
+<td>Binds <em>vectors x,y,z</em> into matrix by columns</td>
+</tr>
+<tr class="odd">
+<td><strong>rbind(x,y,z)</strong></td>
+<td>Binds <em>vectors x,y,z</em> into matrix by rows</td>
+</tr>
+<tr class="even">
+<td><strong>matrix(x,nrow,ncol)</strong></td>
+<td>Creates matrix from <em>vector x</em> with <em>nrow</em> rows and <em>ncol</em> columns</td>
+</tr>
+<tr class="odd">
+<td><strong>array(x,dim=y)</strong></td>
+<td>Creates array from <em>vector x</em> with dimensions of <em>vector y</em></td>
+</tr>
+<tr class="even">
+<td><strong>rep(x,y)</strong></td>
+<td>Creates vector repeats <em>vector x interger y</em> times</td>
+</tr>
+<tr class="odd">
+<td><strong>length(x)</strong></td>
+<td>Returns length of object <em>x</em></td>
+</tr>
+<tr class="even">
+<td><strong>sample(x,size=n)</strong></td>
+<td>Samples number of items (<em>n</em>) from elemetns of <em>object x</em></td>
+</tr>
+<tr class="odd">
+<td><strong>subset(x,subset)</strong></td>
+<td>Subsets <em>object x</em> by conditions of <em>subset</em></td>
+</tr>
+<tr class="even">
+<td><strong>mean(x)</strong></td>
+<td>Returns arithmetic mena of <em>numeric object x</em></td>
+</tr>
+<tr class="odd">
+<td><strong>sd(x)</strong></td>
+<td>Returns standard deviation of <em>numeric object x</em></td>
+</tr>
+<tr class="even">
+<td><strong>max(x)</strong></td>
+<td>Returns maximum value of <em>numeric object x</em></td>
+</tr>
+<tr class="odd">
+<td><strong>min(x)</strong></td>
+<td>Returns minimum value of <em>numeric object x</em></td>
+</tr>
+<tr class="even">
+<td><strong>t(x)</strong></td>
+<td>Transposes <em>matrix x</em></td>
+</tr>
+<tr class="odd">
+<td><strong>plot(x,y)</strong></td>
+<td>Plots elements of <em>vector x</em> agains elements of <em>vector y</em></td>
+</tr>
+<tr class="even">
+<td><strong>boxplot(x~y)</strong></td>
+<td>Generates boxplots for values of <em>numeric vector x</em> by grouping <em>vector y</em></td>
+</tr>
+<tr class="odd">
+<td><strong>lm(x~y)</strong></td>
+<td>Generates a linear model for response <em>vector x</em> by predictor <em>vector y</em></td>
+</tr>
+<tr class="even">
+<td><strong>density(x)</strong></td>
+<td>Estimates density distributions of univariate observations</td>
+</tr>
+<tr class="odd">
+<td><strong>table(x)</strong></td>
+<td>Returns summary of frequencies of all values in R object</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="simple-plotting" class="level2">
+<h2 class="anchored" data-anchor-id="simple-plotting">Simple Plotting</h2>
+<p>Sometimes the first thing you want to do is generate a really quick plot of your data before anything else. This is one of the advantages of R, in that visualizing data is very intuitive and easy because it is object-oriented. For example, if you want to plot the first column versus the second column of data from your object, use the following command:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(new_data<span class="sc">$</span>Bob, new_data<span class="sc">$</span>Steve)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>While we do get to see the data quickly, it’s kind of messy. To give the same plot a title and label the axes, you can do this easily by adding the following arguments to the command:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(new_data<span class="sc">$</span>Bob, new_data<span class="sc">$</span>Steve, <span class="at">main =</span> <span class="st">"Cheeseburgers Eaten"</span>, <span class="at">xlab =</span> <span class="st">"Bob"</span>, <span class="at">ylab =</span> <span class="st">"Steve"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="subsetting-and-targeting-elements-of-r-objects-using-indices" class="level2">
+<h2 class="anchored" data-anchor-id="subsetting-and-targeting-elements-of-r-objects-using-indices">Subsetting and targeting elements of R objects using indices</h2>
+<p>Although the function <em>subset</em> is useful to subset R objects by particular values, objects of classes <em>vector, matrix, array, and data frame</em> are designed for quick manipulation using indices. To illustrate this clearly, use the following commands to create a 3x4 matrix and look at it.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>?matrix</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>mat <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">12</span>, <span class="at">nrow =</span> <span class="dv">3</span>, <span class="at">ncol =</span> <span class="dv">4</span>, <span class="at">byrow =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>mat</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Notice that above each column R displays the index for that column, and likewise for each row. <strong>Follow the steps below to create a new matrix based on the matrix “mat”</strong>:</p>
+<ul>
+<li><ol type="1">
+<li><strong>Make column 1 a vector named “A”</strong></li>
+</ol></li>
+<li><ol start="2" type="1">
+<li><strong>Add columns 2 and 4 together to make a vector “B”</strong></li>
+</ol></li>
+<li><ol start="3" type="1">
+<li><strong>Multiply column 1 by 3 to make a vector “C”</strong></li>
+</ol></li>
+<li><ol start="4" type="1">
+<li><strong>Make a matrix named “new_mat” by binding vectors “A”,“B”,“C” by column</strong></li>
+</ol></li>
+<li><ol start="5" type="1">
+<li><strong>Look at matrix “new_mat”</strong></li>
+</ol></li>
+<li><ol start="6" type="1">
+<li><strong>Multiply the entire matrix “new_mat” by 2 to obtain “final_mat”</strong></li>
+</ol></li>
+<li><ol start="7" type="1">
+<li><strong>Look at matrix “final_mat”</strong></li>
+</ol></li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>A <span class="ot">&lt;-</span> mat[,<span class="dv">1</span>]                       <span class="co"># Step 1</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>B <span class="ot">&lt;-</span> mat[,<span class="dv">2</span>] <span class="sc">+</span> mat[,<span class="dv">4</span>]             <span class="co"># Step 2</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>C <span class="ot">&lt;-</span> mat[,<span class="dv">1</span>] <span class="sc">*</span> <span class="dv">3</span>                   <span class="co"># Step 3</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>new_mat <span class="ot">&lt;-</span> <span class="fu">cbind</span>(A,B,C)            <span class="co"># Step 4</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>new_mat                            <span class="co"># Step 5</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>final_mat <span class="ot">&lt;-</span> new_mat <span class="sc">*</span> <span class="dv">2</span>           <span class="co"># Step 6</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>final_mat                          <span class="co"># Step 7</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>One important note for plotting is that the syntax is different between data frames and matrices. Where data frames use the $ to extract vectors to plot against each other, matrices use the indices used above to create vectors. For example, we can plot the first and third columns of our new matrix “final_mat” against each other. <strong>Run the following two lines of code together</strong>:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(final_mat[,<span class="dv">1</span>], final_mat[,<span class="dv">3</span>])</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">a =</span> <span class="dv">0</span>, <span class="at">b =</span> <span class="dv">3</span>, <span class="at">col =</span> <span class="st">"red"</span>, <span class="at">lty =</span> <span class="st">"dashed"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>You should see a red dashed line going through all three points.</p>
+</section>
+<section id="for-loops" class="level2">
+<h2 class="anchored" data-anchor-id="for-loops">For-loops</h2>
+<p>Often in statistical genetics you may need to repeat something several times. For example, collating results over several replicates may require a for-loop that stores the results in an array.</p>
+<p>To illustrate the point, let’s consider a simple example. Suppose we’d like to learn how the sample mean (<span class="math inline">\(\bar{X}\)</span>) of 50 iid standard normal random variables, <span class="math inline">\(X_1, \cdots, X_{50} \sim N(0, 1)\)</span>, behaves by simulation. To obtain one sample mean, we need to first draw 50 samples, <span class="math inline">\(X_1, \cdots, X_{50}\)</span>, from standard normal, and then calculate the sample mean as <span class="math inline">\(\bar{X} = \frac{1}{n} \sum_i X_i\)</span>. So, to obtain multiple copies of the sample mean, we need to repeat the above procedure multiple times. Let’s look at how we could implement it in R using for-loop (here we intent to obtain 1000 copies of sample mean).</p>
+<ul>
+<li><ol type="1">
+<li><strong>Create an empty vector of length 1000 named “sample_means”</strong>. We will fill this with sample means obtained in each replication.</li>
+</ol></li>
+<li><ol start="2" type="1">
+<li><strong>For each replication</strong></li>
+</ol>
+<ul>
+<li>2.1) <strong>Draw 50 samples</strong></li>
+<li>2.2) <strong>And calculate sample mean</strong></li>
+</ul></li>
+<li><ol start="3" type="1">
+<li><strong>Look at “sample_means” using <code>summary</code> function</strong></li>
+</ol></li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>nrepeat <span class="ot">=</span> <span class="dv">1000</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>nsample <span class="ot">=</span> <span class="dv">50</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>sample_means <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="cn">NA</span>, nrepeat)                <span class="co"># Step 1</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">999</span>)  <span class="co"># a good practice is to set seed for your simulations</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>nrepeat){</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>  samples_i <span class="ot">=</span> <span class="fu">rnorm</span>(nsample, <span class="at">mean =</span> <span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">1</span>)  <span class="co"># Step 2.1</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>  sample_means[i] <span class="ot">=</span> <span class="fu">mean</span>(samples_i)             <span class="co"># Step 2.2</span></span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(sample_means)                           <span class="co"># Step 3</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="introduction-to-ggplot2" class="level2">
+<h2 class="anchored" data-anchor-id="introduction-to-ggplot2">Introduction to ggplot2</h2>
+<p>Although the standard plotting introduced in Section 2.4 will accomplish all of your plotting needs, many people prefer the aesthetics and functionality of plotting in ggplot2. We will do a basic introduction here, mainly to demonstrate the syntax.</p>
+<p>First install and library the ggplot2.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># install.packages("ggplot2")</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Let’s use the dataset in lab_0_ggplot_data.txt.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">read.table</span>(<span class="fu">file.path</span>(myWorkingFolder, <span class="st">'data'</span>, <span class="st">'lab_0_ggplot_data.txt'</span>), <span class="at">header =</span> T)</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>It contains the average number of different cells in lung tissue samples before and after certain treatment procedures. Our plan is to draw a barplot to compare the cell counts (in million) before and after treatment. Instead of trying to create the “perfect” plot in a single attempt, we can will refine one layer at a time. This approach is called incremental development and can be especially useful for generating plots with complex features.</p>
+<p>Create an empty canvas first. Do both axes represent what you are looking for?</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>gg <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df, <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">factor</span>(cell_type), <span class="at">y =</span> count, <span class="at">fill =</span> status))</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>gg</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>It does, but the x-axis doesn’t look pretty! We will deal with that later. Now we add bars that represent cell counts to the plot.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>gg <span class="ot">&lt;-</span> gg <span class="sc">+</span> <span class="fu">geom_bar</span>(<span class="at">stat =</span> <span class="st">"identity"</span>, <span class="at">position =</span> <span class="st">"dodge"</span>)</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>gg</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Note that the label of y-axis is not very precise. What’s the unit of measurement?</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>gg <span class="ot">&lt;-</span> gg <span class="sc">+</span> <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Cell type"</span> , <span class="at">y =</span> <span class="st">"Count (in million)"</span>)</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>gg</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>About 8 percent of males and 0.5 percent of females are color blind, so it’s likely that some of your audience will be among them. We need to pick from more accessible palettes (check https://davidmathlogic.com/colorblind/#%23FFC20A-%230C7BDC for more safe color choices).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>gg <span class="ot">&lt;-</span> gg <span class="sc">+</span> <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"#FFC20A"</span>, <span class="st">"#0C7BDC"</span>))</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>gg</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The grids in the background seems kind of redundant, let’s remove them.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>gg <span class="ot">&lt;-</span> gg <span class="sc">+</span> <span class="fu">theme</span>(<span class="at">axis.line =</span> <span class="fu">element_line</span>(<span class="at">color =</span> <span class="st">'black'</span>), </span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>                 <span class="at">panel.background =</span> <span class="fu">element_blank</span>(), </span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>                 <span class="at">panel.grid.major =</span> <span class="fu">element_blank</span>(), </span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>                 <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>())</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>gg</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Now we can turn to fix the overlapping labels on x-axis.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>gg <span class="ot">&lt;-</span> gg <span class="sc">+</span> <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">60</span>, <span class="at">vjust =</span> <span class="fl">0.5</span>))</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>gg</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Finally, let’s bring the bars right atop of the x-axis. We can also adjust the limits and breaks on the y-axis.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>gg <span class="ot">&lt;-</span> gg <span class="sc">+</span> <span class="fu">scale_y_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">18</span>), <span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">18</span>, <span class="dv">3</span>), <span class="at">expand =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">0</span>))</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>gg</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
