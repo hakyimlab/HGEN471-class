@@ -1,0 +1,288 @@
+---
+title: "Lab 1: Genotype data manipulation and simulation"
+date: "Fri Jan 12 2023" 
+categories: [midway, local, Posit cloud] # to help you decide where you can run this markdown comfortably
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    highlight: textmate
+    number_sections: true
+---
+
+:::{.callout-note}
+*Created by Max Winston with contributions from Charles Washington III, Ankeeta Shah, Yanyu Liang, Erik McIntire, and Jing Gu*
+
+*Modified by Ethan Zhong for Winter 2023*
+
+*Modified by Temi Adeluwa for Winter 2024*
+:::
+
+# Introduction
+This lab section is dedicated to learning how to download HapMap data and manipulate the appropriate files in a command-line program named PLINK. Additionally, in R we will import data files and generate our own data natively. By the end of this lab, you should be able to: 
+
+- **Organize files and folders in Unix**
+- **Know about PED and BED files**
+- **Use PLINK to generate statistics on HapMap data**
+- **Import data files into R**
+- **Simulate genotypes using R**
+
+# Question from last week's lab
+Q: Does Unix sort command take file header into account?
+
+A: The short answer is, yes. Let's take a look at this example from last week. Recall we want to sort the file with respect to the second column (the recombination rate), and we want the order to be from the largest to the smallest. Here's the code:
+```{bash, eval=F}
+cat example.chr22.map | sort -k2nr | head > top_ten.map
+```
+
+When you open top_ten.map file, the header in the original file disappears. Does that mean Unix sort ignores the header by default? No! If you enter the following code, you should see the header at the bottom of the output:
+```{bash, eval=F}
+cat example.chr22.map | sort -k2nr > sorted.map
+cat sorted.map
+```
+
+Because we asked the system to treat the second column as numerical values ("n" in "-k2nr"), the file header (which consists of string characters) got dumped to the end.
+
+But what if you want to keep the header after sorting? Here's my solution to the problem. Maybe you can come up with a simpler one!
+```{bash, eval=F}
+cat example.chr22.map | awk 'NR == 1 {print;next} {print | "sort -k2nr"}' > sorted_header.map
+```
+
+# Logging in and moving files
+
+For the remainder of the document, please notice that steps requiring actions will generally be in bold. For example, **Open Terminal** in Posit Cloud.
+
+Each of you should have been assigned a username on the server. You will use a Secure Shell client to log in to your home directory on the server. You can do this by:
+
+```{bash, eval=FALSE}
+ssh <username>@midway3.rcc.uchicago.edu
+```
+
+Note that you will be prompted to enter your password. 
+One somewhat counter-intuitive facet of password entry in Unix is that there is no indiciation on-screen of characters being typed in. 
+This is an intentional security feature, in order to prevent onlookers from inferring the length of your password. 
+Type in your password for logging into UChicago account when prompted. 
+The midway3 server requires two-factor authentication, so you will next be prompted to log in with DUO, enter a passcode, or receive a call. 
+After you do one of these three things, you should be on the server. 
+
+Using the commands listed above, do the following in your home directory: 
+
+- **1) Go to course directory.**
+- **2) Make your own directory (if you haven't done so already).**
+- **3) Enter your own directory.**
+- **4) Create a directory for this lab session.**
+- **5) Enter the directory you created for this lab session.**
+
+```{r, eval=FALSE}
+cd /project/hgen47100/class_2023       ##Step 1
+mkdir <your_directory>                 ##Step 2
+cd <your_directory>                    ##Step 3
+mkdir lab1                             ##Step 4
+cd lab1                                ##Step 5
+```
+
+# The Basics of PLINK
+
+## Basic Commands and Options
+
+PLINK is a comprehensive program with an enormous range of functionalities and options. We will introduce some basic commands here to get you started, but inevitably, you will want to visit the PLINK documentation. 
+
+Regarding the PLINK version, you may see three versions available currently (Jan 2023). They are: v1.07, v1.9, and v2. PLINK v1.9 and v2 are under active developement whereas v1.07 is not. Throughout this lab, we will use PLINK v1.9, which is the default version on RCC. The reason is two-fold: 1) v1.9 has many enhancements over v1.07 and it is still getting even better; 2) As statistical genetics a fast growing field, new features are actively incorporated into newer version. 
+
+In the following, we list some commonly used commands in PLINK. To get to know more about how to use PLINK v1.9, check  [here](https://www.cog-genomics.org/plink/1.9/) and [here](https://zzz.bwh.harvard.edu/plink/index.shtml) for online documentation.  
+
+Command         |       Description
+-----------     |   --------------------------------------------
+**make-bed**    |   Converts a PED file to a BED file.
+**missing**     |   Generates summary statistics on missing data.
+**freq**        |   Generates summary statistics on allele frequencies.
+**assoc**       |   Runs a basic genome-wide association analysis (on discrete or continuous trait).
+**model**       |   Runs a variety of genotypic association models.
+**cluster**     |   Perform complete linkage clustering of individuals on autosomal SNPs. 
+
+
+In addition to the commands which generate files on their own, the following basic options are important. In any analysis, it is important to perform quality control on the input data (so that we reduce the chance to be placed at "garbage in, garbage out" situation). And equally importantly, we should report how the QC is done in the manuscript (*e.g.* what thresholds/limits are used to filter out outliers, etc). Often, you may want to use many values to explore whether the perceived association or relationship is robust to your *a priori* limits.
+
+Option         |       Description
+-----------    |   ------------------------------------------
+**mind**       |   Upper limit for the rate of SNPs missing for individual.
+**geno**       |   Upper limit for the rate of individuals missing at a given SNP.
+**hwe**        |   Lower limit for deviation from Hardy-Weinberg Equilibrium (unit = p-value).
+**maf**        |   Lower limit for Minor Allele Frequency (MAF).
+**chr**        |   Limits to a single chromosome.
+**within**     |   Allows for stratified analysis.
+**adjust**     |   Reports adjusted significance values for an association.
+
+## PLINK syntax
+
+PLINK syntax follows basic Unix style commands. However, one notable element of the syntax is that PLINK generally takes the file name without extension. For example, one of the first steps in PLINK is to make a BED file from a PED file. In such an example, a command could be (this is just an example, DON'T run the code in terminal): 
+
+```{bash, eval=FALSE}
+plink --file g_data --make-bed --out g_data_out
+```
+
+Here, we are calling the PLINK command and providing the root for the input file *"g_data.ped"*, commanding PLINK to make a BED file (*"\--make-bed"*), and naming an output *"g_data_out.bed"*.
+
+## PED files
+It is helpful to know the correct format for PED files in case you want to troubleshoot or design an automated script to modify an existing PED file. All PED files are white-space (space or tab) delimited files, arranged such that the **first six columns** are mandatory: 
+
+- **1) Family ID**
+- **2) Individual ID**
+- **3) Paternal ID**
+- **4) Maternal ID**
+- **5) Sex** (1 = male, 2 = female; other = unknown)
+- **6) Phenotype**
+
+All IDs are alphanumeric, and a PED file must have only 1 phenotype in the sixth column, and may be quantitative or qualitative. Every two columns after the first six are genotypes of SNPs listed in .map file in the same order. These SNPs should be biallelic so that can be represented by numbers or letters (1,2,3,4 or A,T,G,C), as long as 0 is not used (this is default for missing data). So, each of the two columns represent the genotype of a biallelic locus. For instance, 7th and 8th column are allele calls for the first variant in the .map file. Therefore, the number of columns in any PED file is equal to 2 times the number of SNPs (genotypic data) plus the leading six columns. 
+
+If you'd like to get to know more on PED format, PLINK documentation has detailed description at [here](https://www.cog-genomics.org/plink/1.9/formats#ped). More importantly, there are many more formats that could be input or generated by PLINK. Whenever you encounter a new format, you can get to know about it using PLINK documentation [File formats](https://www.cog-genomics.org/plink/1.9/formats) page.  
+
+Although BED files (binary PED files) are often used for analyses to reduce computational time, they are much harder to work with since they are in binary format, and thus generally modifications are made to PED files and then they are then converted to BED files using the command in Section 1.2.
+
+## Basic Operations (HapMap Example)  
+
+### Download and unzip dataset and load PLINK
+
+To begin, we will start with the dataset included with the standard PLINK download. This dataset includes randomly selected genotypes (~80,000 autosomal SNPs) from 89 Asian HapMap individuals. In order to download this data for this lab, **navigate to your directory on the cluster, and use the following command to download the zipfile**:
+
+```{bash, eval=FALSE}
+wget zzz.bwh.harvard.edu/plink/hapmap1.zip
+```
+
+**Next, create a new directory, unzip the file you downloaded, and place the contents in that directory.** 
+
+You should note that this file is a .zip file rather than a .tar file. **As such you should use the unzip command instead of the tar command to access the contents.**
+
+```{bash, eval=FALSE}
+mkdir plink                   ##Make a new directory for the PLINK tutorial
+unzip hapmap1.zip -d plink    ##Unzip the HapMap data into the PLINK directory
+cd plink                      ##Go to the PLINK directory
+```
+
+Now that we have our dataset, we need to access PLINK, the software we'll be using for this lab. We'll be accessing the program directly from the cluster. Clusters, particularly those that service genetics and genomic research at institutions, often come with many programs built in. These programs are available to all users and prevents them from needing to download multiple programs to their individual machines. **View the versions of PLINK available to you and load the specified version of PLINK.**
+
+- **1) Look at the programs available for you to load**
+- **2) Specifically look at the version of plink available to you**
+- **3) Load the default version of plink for you to use**
+
+```{bash, eval=FALSE}
+module avail                   ##Step 1
+module avail plink             ##Step 2
+module load plink              ##Step 3
+```
+
+
+Sidenote: the midway cluster has a number of other software packages already pre-installed. For future reference, if you want to determine what packages / whether a specific package is already installed on the cluster:
+
+```{bash, eval=FALSE}
+module avail #to list all packages installed on the cluster 
+module avail <insert_package_name> #to check if a specific package is installed
+```
+
+
+### Converting PED files to BED files
+
+Now that you have access to PLINK, this next command will convert the example hapmap1 PED file to a BED file. Make sure these commands are entered in the same directory where the hapmap files are located. Note that once you have converted to a BED file, the input command becomes *bfile* instead of *file*. **Type the following to convert your PED to a BED file**:
+
+```{bash, eval=FALSE}
+plink --file hapmap1 --make-bed --out hapmap1
+```
+
+This command should have converted your input file (*hapmap1.ped*) into a binary PED file (*hapmap1.bed*). **Check for the new file by looking through your directory**. You may notice that there are now two other types of files in the directory (*hapmap1.bim* and *hapmap1.fam*). The .bim file is a revised mapping file and the .fam file is the first six columns of the PED file. Although it is fine to extract data from these files, people usually do not edit them manually. 
+  
+### Generating statistics on missing data  
+  
+Often, datasets may have missing data, and it is helpful to know some general statistics on this missing data. To generate these stats, **type the following**:
+
+```{bash, eval=FALSE}
+plink --bfile hapmap1 --missing --out miss_stat
+```
+
+This command will create *miss_stat.lmiss* and *miss_stat.imiss* files, summarizing the per SNP and per individual rates of missing data, respectively. **Open take a look at these files in Terminal to check formatting**.
+
+*Problem 1*  
+What are the columns for the two files generated (.lmiss & .imiss)?
+
+**Try the following command to get some basic summary data on the files**:
+
+```{bash, eval=FALSE}
+wc miss_stat.imiss
+```
+
+*Problem 2*  
+You should see 3 numbers returned by the command above. What do the different numbers correspond to? How many SNPs are in this dataset? 
+
+### Generating statistics on allele frequencies
+
+For most analyses it is important to know the minor allele frequencies (MAF) for any individual SNP, as you may want to restrict the analysis to SNPs with MAF above a particular value. **To generate a file with all SNPs and the MAF, type the following command**:
+
+```{bash, eval=FALSE}
+plink --bfile hapmap1 --freq --out freq_stat
+```
+
+*Problem 3*  
+What are the different columns in the file generated (*freq_stat.frq*)? What do they mean?
+
+### Hardy-Weinberg equilibrium testing
+Testing HWE allows us to detect deviations that may arise from genotyping error, nonrandom mating, or selection. **To generate a list of genotype counts and Hardy-Weinberg test statistics for each SNP, use the command**:
+
+```{bash, eval=FALSE}
+plink --file hapmap1 --hardy
+```
+
+*Problem 4*  
+What are the different columns in the file generated (*plink.hwe*)? What do they mean?
+  
+### Inbreeding coefficients
+PLINK can also calculate inbreeding coefficients based on the observed versus expected number of homozygous genotypes. **To generate a file containing inbreeding coefficient estimates (F), use the command**:
+  
+```{bash, eval=FALSE}
+plink --file hapmap1 --het
+```
+
+
+# Working with data in R
+
+The following problems will review what we covered in lab 0.
+
+## The iris dataset
+  
+**iris** is one of R's built-in datasets. Load the **iris** dataset into R and finish the following problems.
+
+*Problem 5*
+What's the dimension of **iris**?
+
+*Problem 6*
+What does each column of **iris** contain?
+
+*Problem 7*
+Plot the first column against the second column using ggplot2 (we will deduct points if you use base R graphics instead of ggplot2). Color the points by species and describe your observations.
+
+## Simulating genotype data
+  
+For simple simulation of genotype data, we'll assume the SNP is biallelic and therefore use a binomial distribution. By passing our desired arguments for the parameters of the rbinom function, we can randomly generate genotypes. We set the parameter $n$ equal to 1000 for the number of individuals in our simulation. Assuming the individuals are *diploid*, the number of trials, $size$, will be 2 *per individual*. Finally, the probability of "success" for each trial, the minor allele frequency, is $p$. **Run the following simulation of genotype data**:
+  
+```{r, eval=FALSE}
+# Simulate random SNP genotypes for 1000 diploid individuals, given a minor allele frequency of 0.2
+num_individuals <- 1000
+ploidy_level <- 2
+maf <- 0.2
+geno <- rbinom(n = num_individuals, size = ploidy_level, p = maf)
+```
+
+We now have the object "geno" containing genotypes for 1000 individuals. Given the minor allele is designated as 1 and major allele as 0, each genotype is either homozygous dominant (0+0=0),  heterozygous (0+1=1), or homozygous recessive (1+1=2). **Let's rename these as AA, Aa, and aa to make this more intuitive**:
+```{r, eval=FALSE}
+# The gsub function acts as a find and replace, type ?gsub in the console for more info
+geno <- gsub("0", "AA", geno)
+geno <- gsub("1", "Aa", geno)
+geno <- gsub("2", "aa", geno)
+```
+
+**Check the number of times each genotype occurs by using the the "table" function**:
+```{r, eval=FALSE}
+table(geno)
+```
+*Problem 8*  
+We set our minor allele frequency as 0.2, but the proportion of genotypes containing the minor allele is roughly 0.4. Why is this the case?
+
+
