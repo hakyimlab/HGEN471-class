@@ -1,6 +1,6 @@
 ---
 title: "Lab 1: Genotype data manipulation and simulation"
-date: "Fri Jan 12 2023" 
+date: "Fri Jan 12 2024" 
 categories: [midway, local, Posit cloud] # to help you decide where you can run this markdown comfortably
 output:
   html_document:
