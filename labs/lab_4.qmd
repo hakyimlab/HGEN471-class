@@ -1,0 +1,229 @@
+---
+title: "Lab 4: Fine-mapping with SuSiE"
+date: "Fri Feb 2 2024" 
+categories: [midway, Posit cloud] # to help you decide where you can run this markdown comfortably
+---
+
+:::{.callout-note}
+*Created by Max Winston with contributions from Charles Washington III, Ankeeta Shah, Yanyu Liang, Erik McIntire, and Jing Gu*
+
+*Modified by Ethan Zhong for Winter 2023* 
+
+*Modified by Temi Adeluwa for Winter 2024*
+:::
+
+SuSiE is a state-of-art fine-mapping method based on Bayesian variable selection regression. The name of "**SuSiE**" means the **Su**m of **Si**ngle **E**ffects, which detects single causal effect one at a time but also extends to multiple effects through conditional analysis. 
+
+SusieR package was developed to run fine-mapping procedures over GWAS summary statistics or individual level genotype/phenotype data. More details about the SusieR package can be found at [SusieR github page] [https://stephenslab.github.io/susieR/index.html].
+
+By the end of the lab, you should be able to:
+
+- **Understand the types of input files for running susieR**
+- **Interpret output results from susieR**
+- **Evaluate the effects of setting different numbers of causal variants on the results**
+- **Compare the effects of using different LD reference panels on the results**
+
+# Setup
+
+## Download packages
+**First, let's download necessary packages and load data for today's lab session**
+```{r, echo=FALSE, message=FALSE}
+rm(list = ls())
+gc()
+pkgs <- c("susieR", "data.table","dplyr","bigsnpr", "ggplot2")
+for (i in pkgs) {
+  if (!require(i, character.only = T)) {
+    install.packages(i)
+  }
+}
+library(susieR)
+library(data.table)
+library(dplyr)
+library(bigsnpr)
+library(ggplot2)
+list.files()
+load("susie.RData")
+```
+
+## Dataset
+* GWAS summary statistics (after QC):
+    - Body mass index as the phenotype
+    - A meta-analysis of Locke et al. 2015 and analyses from UK Biobank
+    - No individual genotypes are provided
+    - Chr, pos, rsID, effect/non-effect alleles, beta, se, p-values, odds ratio, N, etc.
+
+* Reference LD panels from 1000 genome or UK Biobank
+    - chr, pos, rsID, major/minor alleles, etc.
+    - LD matrix: pair-wise LD coefficients across each LD block
+  
+* LD blocks:
+    - Based on the European haplotypes, researchers have built 1704 LD blocks, where variants across blocks are not correlated.
+
+  
+## Input files for susieR
+
+* Individual level phenotypes/genotypes: `susie()` or Summary statistics: `susie_rss()`
+* LD coefficients (R)
+* Expected number of causal variants (L)
+  
+
+# Run susieR on the simulated example 
+Let's first test the performance of susieR on the simulated dataset. We load the N3finemapping data from susieR package:
+```{r}
+data(N3finemapping)
+attach(N3finemapping)
+str(N3finemapping)
+```
+We can identify which variables are simulated as truly causal by searching for $b\neq0$.
+```{r}
+which(true_coef[,1] != 0)
+plot(true_coef[,2], ylab = "true effect size")
+```
+
+Run linear regression to obtain p-values, similar to running GWAS.
+```{r}
+sumstats <- univariate_regression(X, Y[,1])
+z_scores <- sumstats$betahat / sumstats$sebetahat
+susie_plot(z_scores, y = "z", b = true_coef[,1])
+```
+
+## Fine-mapping with susieR at L = 1
+
+The susie_plot() function is a scatter plot of PIP or z scores against variant index. The variables selected into credible sets are colored by groups. 
+```{r}
+fitted.L1 <- susie(X, Y[,1], L = 1)
+susie_plot(fitted.L1, y = "PIP")
+```
+
+## Fine-mapping with susieR at L = 10
+
+```{r}
+fitted.L10 <- susie(X, Y[,1], L = 10)
+susie_plot(fitted.L10, y = "PIP")
+```
+
+By default, a credible set is defined as the minimum set of variables of which PIPs sum up to be at least 95%, and the minimum mean correlations within a set to be 0.5.
+
+**Problem 1** 
+With seting L = 10, are the causal variables included in the credible sets?  
+```{r}
+print(fitted.L10$sets)
+```
+
+There isn't a uniquely optimal strategy of choosing L. In practice, I often try both L = 5 and L = 10 and check the credible set distribution at individual loci.
+
+# Fine-mapping on GWAS summary statistics
+Let's first take a look at GWAS summary statistics file. There is one additional column that specifies the LD block that each variant belongs to.
+```{r}
+head(gwas)
+gwas <- split(gwas, gwas$block)
+names(gwas)
+```
+
+By plotting -log10(p) against genomic positions, we see many SNPs near the lead SNP passing the significance threshold. To help prioritize SNPs for downstream analysis and validation, fine-mapping provides a statistical approach to evaluate each SNP's causal probability.
+```{r}
+orig.gwas <- gwas[["1452"]]
+plot(x = orig.gwas$pos, y = -log10(orig.gwas$pval), 
+     xlab = "pos", ylab="-log10(p)")
+```
+
+## Step 1: Match variants between GWAS summary stats and LD panel
+Bigsnpr is a very useful R packpage to process genotype data. We will use its "snp_match" function to match variants in GWAS summary stats and LD panels. This function outputs a summary table with GWAS summary statistics for the matched SNPs and additional columns such as the "bigSNP_index", the index number for each matched variant in the LD panels. We will further utilize these index numbers to quickly extract the LD coefficients from the LD matrix. 
+```{r}
+?bigsnpr::snp_match  # strand information is crucial in bioinformatic analysis
+matched.gwas <- as_tibble(bigsnpr::snp_match(sumstats = gwas[["1452"]], 
+                          info_snp = bigSNP[["1452"]]$map) %>% 
+                          dplyr::rename(og_index = `_NUM_ID_.ss`) %>% 
+                          dplyr::rename(bigSNP_index = `_NUM_ID_`))
+```
+**Problem 2**
+From the help page of "snp_match" function, we know when the alleles are reversed the directions of beta values will be reversed as well. Let's make a scatter plot comparing the beta values from original gwas against those from the matched GWAS. 
+
+**Problem 3**
+Make the same plot for z-scores. The directions of z scores can have a big impact on susie's performance. So be careful about specifying the right z-scores used in susie. Otherwise, you can directly compute z-scores (dividing beta by se). This relationship also implies the direction of z scores should be the same as beta. 
+
+Knowing the directions of z scores were not updated, we manually computed the z scores in the following codes and repeated this step by looping over all the LD blocks. 
+```{r}
+for(i in names(gwas)){
+  gwas[[i]] <- as_tibble(bigsnpr::snp_match(sumstats = gwas[[i]], 
+                          info_snp = bigSNP[[i]]$map) %>%  
+                          dplyr::rename(og_index = `_NUM_ID_.ss`) %>% 
+                          dplyr::rename(bigSNP_index = `_NUM_ID_`)) %>%
+                          dplyr::mutate(z_matched = beta/se)
+}
+```
+
+## Step 2: Extract LD coefficients for the tested SNPs
+
+The given LD matrix for each LD block is a N by N matrix, where N is the number of common variants within the block. The row and column index match with the "bigSNP_index" in the summary table output from snp_match function.
+```{r}
+snps.vec <- gwas[["1452"]]$bigSNP_index
+r2.mat <- bigSNP[["1452"]]$LD_matrix[snps.vec, snps.vec]
+dim(r2.mat)
+# check if the bigSNP_index matches between GWAS and the LD panel
+sum(gwas[["1452"]]$snp != bigSNP[["1452"]]$map[snps.vec, "id"])
+```
+
+## Step 3: run susie_rss() for summary statistics
+
+Let's first try L = 1. Here we sepcified z scores as the column of "z_matched", which was corrected by directions.
+```{r}
+res.L1 <- susieR::susie_rss(z = gwas[["1452"]]$z_matched, R = r2.mat, L = 1)
+summary(res.L1)
+res.L1[["z"]] <- gwas[["1452"]]$z_matched
+# Run the following three lines of code together
+par(mfrow = c(1,2))
+susie_plot(res.L1, "PIP", add_legend = "topleft")
+susie_plot(res.L1, y = "z")
+```
+
+From the output summary, we know one credible set was identified. There are two variants, index 482 and 492, included in the credible set, each with around 0.5 posterior probability. As their average LD correlation is very close to one, SuSiE was not able to distinguish between them. Therefore, the probability of being causal given data were equally distributed between these two variables. 
+
+**Problem 4**
+Run susie at L = 10 and then report the number of variables selected in each credible set. Additionally, use susie_plot() to visualize the distributions of PIPs and -log10(pval).
+
+Now we are done with the general procedures for running susie. Let's put them together and loop over all the blocks.
+```{r}
+susie.ukb.L10 <- list()
+for(i in names(gwas)){
+  snps.vec <- gwas[[i]]$bigSNP_index
+  r2.mat <- bigSNP[[i]]$LD_matrix[snps.vec, snps.vec]
+  susie.ukb.L10[[i]] <- susie_rss(z = gwas[[i]]$z_matched, R = r2.mat, L = 10)
+  susie.ukb.L10[[i]][["z"]] <- gwas[[i]]$z_matched  # add the original z-scores to SuSiE outputs
+}
+```
+# Compare different LD panels
+Lastly, we will examine how the mismatch of LD matrix can affect how variants are selected into credible sets . Our previous analysis was based on the LD matrix computed over around 50K British individuals provided by UK Biobank. In the dataset, we also provided the fine-mapped results using the LD matrix from samples in 1000 genome consortium. The LD matrix for the 1kg LD reference panel was computed over 500 Eurpean individuals. 
+
+When comparing the fine-mapped results over all 97 blocks that contain GWAS lead loci, we found using 1kg LD reference panel tends to capture many more variants with non-significant p-values in credible sets. This looks suspicious and deserves some examinations. Let's focus on one specific LD block 704 and see how the results differ due to the use of different LD reference panels. 
+
+**Problem 5**
+Compare the credible sets obtained from running SuSiE using ukbb LD matrix and 1kg LD matrix. The SuSiE outputs from using 1kg LD matrix are stored in a variable called `susie.1kg.L10`. Also make the plots of PIPs or -log10(p-val) to show the difference. 
+
+**Check the LD patterns relative to the confident SNP in credible sets**
+
+We can also visualize LD patterns by coloring the data points by the LD coefficients relative to the SNP of interest. Particularly, we examined the SNP with the highest SNP in the additional credible set identified by SuSiE using 1kg LD reference panel. From the plot below, LD coefficients relative to the top snp rs12204742 in that credible set overall look stronger in UKB LD panel shown by darker color. When we add up the PIPs for all SNPs in the credible set identified by 1kg LD reference, the total PIP does not pass the default threshold. Thus, the fine-mapped results can be affected by the differences in LD reference panels. This differences may be sutble in this example, but more spurious results have been seen with mismatched LD references.
+```{r}
+ggplot(susie.1kg[["704"]]$gwas, aes(x=pos,y=-log10(pval), color=susie.1kg[["704"]]$LD.coef[789,])) + 
+  geom_point() + 
+  scale_color_gradient(low = alpha("yellow", 0.2), high ="red") + 
+  labs(color = "LD coefficient", 
+       title = "1kg", 
+       xlab = "variable", 
+       ylab = "-log10(p-val)")
+
+ggplot(gwas[["704"]], aes(x=pos,y=-log10(pval), color=bigSNP[["704"]]$LD_matrix[gwas[["704"]][788,]$bigSNP_index, gwas[["704"]]$bigSNP_index])) + 
+  geom_point() + 
+  scale_color_gradient(low = alpha("yellow", 0.2), high ="red") + 
+       labs(color = "LD coefficient", 
+            title = "UKB", 
+            xlab =  "variable", 
+            ylab = "-log10(p-val)")
+```
+
+# PLINK association testing review
+
+**Problem 6**
+In problem 8 of Lab 3, you are asked to draw a Manhattan plot for the initial GWAS (done in problem 6) using the appropriate Bonferroni-corrected significance threshold. To correctly calculate the significance threshold, you need to first filter all the SNPs with NA p-value. However, if you look at the association statistics, there are some SNPs with a valid p-value but NA odds ratio (OR). Do we need to count these SNPs when calculating significance threshold? Why? (Hint: check the allele frequency in samples)
+
+
