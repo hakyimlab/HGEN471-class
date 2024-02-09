@@ -29,12 +29,12 @@ When you run jobs on a compute node, you are using computing resources, or Servi
 
 First, let's log into **Midway2**:
 ```{bash, eval=FALSE}
-ssh <cnetid>@midway3.rcc.uchicago.edu
+ssh <cnetid>@midway2.rcc.uchicago.edu
 ```
 
 We will be using interactive session for our lab today. **Start an interactive session using 1 core and 8GB of RAM (using our class account) with the following command**:
 ```{bash, eval=FALSE}
-sinteractive --partition=bigmem --account=hgen47100 --nodes=1 --mem=8G --time=2:00:00
+sinteractive --partition=broadwl --account=hgen47100 --nodes=1 --mem=8G --time=2:00:00
 ```
 
 Now you can proceed with working on Midway as we've done in previous labs, but you will have more computational power at your disposal.
@@ -65,7 +65,7 @@ The data files for today's lab can be found at `/project/hgen47100/class_2023/da
 ```{bash, eval=FALSE}
 cp -r /project/hgen47100/class_2023/data/lab5 /project/hgen47100/class_2024/users/<your_folder>
 
-cd /project/hgen47100/class_2023/<your_directory>/lab5
+cd /project/hgen47100/class_2024/users/<your_folder>/lab5
 ```
 
 Running GCTA is nice because it prints lots of useful information to the screen as it runs, and when it concludes. However, due to the computation required for creating a GRM, and the large size of the some of the input and output files, running it can take a bit of time. Depending on what you're doing for this lab, you can expect some processes to take up to 3 minutes, and of course, with bigger files, it would take even more time. The syntax used to run GCTA is similar to other pipelines we have used on the command line: GCTA is called and modified with option flags (see Section 2.1). For example, one of the first things you will usually need to do is take your SNP data (BED, FAM, BIM formats-just like in PLINK!) and make a GRM. **Try this with the following command and the "test" files:**
