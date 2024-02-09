@@ -1,0 +1,142 @@
+---
+title: "Lab 5: Calculating the Heritability of Complex Traits with GCTA"
+date: "Fri Feb 9 2024" 
+categories: [midway, Posit cloud] # to help you decide where you can run this markdown comfortably
+---
+
+:::{.callout-note}
+*Created by Max Winston with contributions from Charles Washington III, Ankeeta Shah, Yanyu Liang, Erik McIntire, and Jing Gu*
+
+*Modified by Ethan Zhong for Winter 2023* 
+
+*Modified by Temi Adeluwa for Winter 2024*
+:::
+
+[Genome-wide Complex Trait Analysis](https://yanglab.westlake.edu.cn/software/gcta/#Overview) (GCTA) was originally designed to estimate the heritability of complex traits using genome-wide SNPs, but has now been extended for numerous other functionalities to better understand the genetic architecture of these traits ([Yang et al., 2011](https://www.cell.com/ajhg/fulltext/S0002-9297(10)00598-7)). Generally, GCTA estimates heritability using the proportion of phenotypic variance explained by the a genetic relationship matrix (GRM), which is calculated using the genome-wide SNP data. In today's lab we will become familiar with the GCTA software and some of its capabilities, as well as explore some of the conceptual issues dealt with in class with a large SNP dataset provided by Brandon Pierce. By the end of the lab you should be able to:
+
+- **Setup an interactive job on an RCC compute node**  
+- **Construct GRMs given BED, FAM, and BIM files**  
+- **Run standard analysis in GCTA on large datasets (univariate REML)**  
+- **Run bivariate REML analysis in GCTA**
+- **Relate how increasing density of markers affects heritability estimate**
+- **Relate how subsetting markers may affect heritability estimate**
+
+# Setup an interactive job
+
+When you first login to RCC, you will be on the "login node." While you can technically run computations with low resource requirements on this node, it is better to run jobs on a "compute node" (also, if you demand too much of the login node it will boot you off). Running jobs on a compute node can either be as a batch job (precode your commands in a script, submit-and-forget) or interactive (enter your commands manually in real time, while utilizing the resources of the compute node). [See the RCC Midway User Guide for more information](https://rcc.uchicago.edu/docs/). 
+
+When you run jobs on a compute node, you are using computing resources, or Service Units (SUs). We have been allocated SUs by RCC to use for this class, and you can draw from them using the \--account command. You can also specify the number of cores, memory, block of time, and other parameters (see the Midway guide for more details). Note that your interactive session has a default "wall time" of 2 hours after which it will automatically end (you can adjust this using \--time, but it won't be necessary for our labs). Also,  if the resources you requested for a job are too low, you may see something like "bus error" and you should increase the number of cores or RAM.
+
+First, let's log into **Midway2**:
+```{bash, eval=FALSE}
+ssh <cnetid>@midway3.rcc.uchicago.edu
+```
+
+We will be using interactive session for our lab today. **Start an interactive session using 1 core and 8GB of RAM (using our class account) with the following command**:
+```{bash, eval=FALSE}
+sinteractive --partition=bigmem --account=hgen47100 --nodes=1 --mem=8G --time=2:00:00
+```
+
+Now you can proceed with working on Midway as we've done in previous labs, but you will have more computational power at your disposal.
+
+# Basics of GCTA
+
+## Standard GCTA options  
+
+option                        |     Description
+----------                    |   ---------------------------------------------------------
+**make-grm**                  |   Generates GRM from SNP data (BED, FAM, BIM files).
+**make-grm-bin**              |   Generates binary GRM from SNP data (BED, FAM, BIM files).
+**bfile**                     |   Specifies stem name from BED file for analysis.
+**out**                       |   Specifies output stem name.
+**pheno**                     |   Specifies file containing phenotypic information.
+**mpheno**                    |   Gives the column number within phenotype file to use for analysis.
+**reml**                      |   Runs univariate restricted maximum likelihood (REML) analysis.
+**grm**                       |   Specifies GRM file for analysis.
+**grm-bin**                   |   Specifies binary GRM file for analysis.
+**reml-bivar**                |   Runs bivariate restricted maximum likelihood (REML) analysis.
+**reml-maxit**                |   Sets the maximum number of iterations to run (Default: 100).
+
+There is a lot of overlap between PLINK options and GCTA options. For example, the maf option does the same thing in GCTA as it does in PLINK.
+
+## Basic GCTA syntax
+
+The data files for today's lab can be found at `/project/hgen47100/class_2023/data/lab5`. **DO NOT WORK IN THIS DIRECTORY!** Please first copy the data files into your personal directory and run the code on your own copy:
+```{bash, eval=FALSE}
+cp -r /project/hgen47100/class_2023/data/lab5 /project/hgen47100/class_2024/users/<your_folder>
+
+cd /project/hgen47100/class_2023/<your_directory>/lab5
+```
+
+Running GCTA is nice because it prints lots of useful information to the screen as it runs, and when it concludes. However, due to the computation required for creating a GRM, and the large size of the some of the input and output files, running it can take a bit of time. Depending on what you're doing for this lab, you can expect some processes to take up to 3 minutes, and of course, with bigger files, it would take even more time. The syntax used to run GCTA is similar to other pipelines we have used on the command line: GCTA is called and modified with option flags (see Section 2.1). For example, one of the first things you will usually need to do is take your SNP data (BED, FAM, BIM formats-just like in PLINK!) and make a GRM. **Try this with the following command and the "test" files:**
+
+```{bash, eval=FALSE}
+mkdir output  # create a folder to store output files
+module load gcta  # load gcta
+gcta --bfile test --autosome --maf 0.01 --make-grm --out output/test
+```
+
+*Problem 1*
+
+How many individuals are there in the test dataset?
+
+## Basic REML run
+
+GCTA employs a restricted maximum likelihood (REML) method to estimate the proportion of phenotypic variance explained by SNP data ([Yang et al., 2010](https://www.nature.com/articles/ng.608)). **Run a basic REML analysis on the "test" GRM you created with the following command:**
+
+```{bash, eval=FALSE}
+gcta --grm output/test --pheno test.phen --reml --out output/test
+```
+
+Results can be found in the **test.hsq** file. **Open this file in your preferred text editor.** Recall from lecture that narrow-sense heritability is additive genetic variance over phenotypic variance.
+
+*Problem 2*
+
+Is this phenotype heritable (i.e., is the heritability estimate statistically significant)?
+
+*Problem 3*
+
+What is the heritability estimate? What is the standard error of this estimate?
+
+# Manipulating GRMs for a Robust Assessment of Heritability
+
+## Effect of SNP Density on Heritability Estimation
+
+The density at which SNPs are sampled throughout the genome can have an important effect on heritability estimates of complex traits. In order to illustrate this point, you have been provided two large SNP datasets (250k and 500k markers) of 1,000 individuals and a file with two phenotypes (named "two_phenotypes.txt"). 
+
+*Problem 4*
+
+For phenotype 1, create a GRM based on the 250,000 whole-genome SNPs (250k.bed, 250k.fam, 250k.bim) and estimate the heritability (Hints: Making a binary GRM may save you major time, and don't forget to specify you want column 1 in the phenotype file to be used for REML analysis). Provide the command.
+
+*Problem 5*
+
+Now, create a GRM based on the 500,000 whole-genome SNPs (500k.bed, 500k.fam, 500k.bim) and estimate the heritability. Provide the command.
+
+*Problem 6*
+
+When increasing the number of SNPs from 250k to 500k, how did the heritability estimate and/or SE change and why? What might this say about the relationship between SNP density and estimating heritability more generally?
+
+## Effect of Subsetting a GRM to Causal Variants on Heritability Estimation
+
+Some time-traveling scientists who have conducted GWAS of all humans on earth from all times deliver you a dataset containing only causal variants (causal.bed, causal.fam, causal.bim). Let's explore how using this set of causal variants may change our estimation of heritability.
+
+*Problem 7*
+
+Create a GRM based only on the causal variants and estimate the heritability. Provide the command.
+
+*Problem 8*
+
+How did the estimate and/or SE change compared to the REML analysis with the 500k GRM? Why might this be?
+
+
+## Estimating Genetic Correlation of Multiple Phenotypes
+
+*Problem 9*
+
+Using the GRM generated from 500k SNPs, estimate the genetic correlation between phenotype 1 and 2 using a bivariate, rather than a univariate, REML run. Provide the command. (hint: `--reml-bivar` and [documentation on bivariate REML analysis](https://yanglab.westlake.edu.cn/software/gcta/#BivariateGREMLanalysis))
+
+*Problem 10*
+
+Which line in the output file `*.hsq` is genetic correlation? What does this "genetic correlation" mean? 
+
+
