@@ -1,0 +1,165 @@
+---
+title: "Lab 6: TensorQTL"
+date: "Fri Feb 16 2024" 
+categories: [midway, Posit cloud] # to help you decide where you can run this markdown comfortably
+---
+
+:::{.callout-note}
+*Created by Max Winston with contributions from Charles Washington III, Ankeeta Shah, Yanyu Liang, Erik McIntire, and Jing Gu*
+
+*Modified by Ethan Zhong for Winter 2023* 
+
+*Modified by Temi Adeluwa for Winter 2024*
+:::
+
+In eQTL analysis, we test association for each gene in transcriptome against a set of variants.
+Typically, for cis-eQTL analysis, one gene could have thousands of variants to test against. 
+Matrix eQTL @matrixqtl was developed to create a computationally less burdensome analysis for eQTL identification. 
+Compared to other existing tools for QTL analysis, Matrix eQTL is **orders of magnitude faster** in analysis due to specific preprocessing and its use of large matrix operations for the computationally difficult aspects of the system. 
+
+To compare between genes which habor different LD structures and different number of testing variants, the statistical test underlying cis-eQTL requires permutation.
+So it is computationally intensive even with matrixQTL. 
+To overcome the computational burden of permutation, FastQTL @fastqtl proposed an approximate simulation scheme which is efficient for large-scale transcriptome-wide analysis, *i.e.* Geuvadis & GTEx.
+
+In the past few years, GPU has been widely adapted for many computations. 
+TensorQTL @tensorqtl was recently developed which is capable of running on both CPU and GPU. 
+And when GPU is enabled, it runs 100 times faster than CPU. 
+Today, we will learn to use `tensorqtl` with CPU. (And to run on GPU needs only few more setup steps with the same command!)
+By the end of the lab you should be able to:
+
+- **Understand the types of files required for tensorQTL**  
+- **Interpret the results of tensorQTL**  
+
+# Log in to Midway 2
+
+Today's lab will be on Midway 2. Run the following code to log in and create directory.
+```{bash, eval=F}
+ssh <your_cnetid>@midway2.rcc.uchicago.edu
+cd /project/hgen47100/class_2024/users/<your_directory>
+mkdir lab6
+```
+
+:::{.callout-warning}
+The conda environment that we will use is in: `/project2/hgen47100/software/conda_env/tensorqtl`
+
+The tensorqtl software itself is in: `/project2/hgen47100/software/tensorqtl/tensorqtl`
+
+The data we will use is in: `/project/hgen47100/class_2024/data/lab6`
+
+You don't have to go into this folder. I'd love for you not to delete anything, please. But if you want to take a look at the files, you can copy them to your own folder: `cp -r /project/hgen47100/class_2024/data/lab6/* ./lab6`.
+:::
+
+# tensorQTL
+
+## Input files for eQTL analysis
+
+* **Phenotype**: a matrix representing gene expression levels in each individual (gene x individual)
+* **Covariate**: a matrix representing value of covariate values in each individual (covariate x individual)
+* **Genotype**: a matrix representing genotype dosage (effect allele) for each variant and individual (in plink format)
+
+Note that we need to know the genomic position of the gene (say the position of transcription start site, TSS) since we test cis-eQTL for nearby variants only. The example data for this lab is at `/project/hgen47100/class_2024/data/lab6`:
+
+```{bash}
+#cp -r /project/hgen47100/class_2024/data/lab6/* ./lab6
+```
+
+* **Phenotype**: `GEUVADIS.chr22.expression.bed.gz`
+* **Covariate**: `GEUVADIS.445_samples.covariates.txt`
+* **Genotype**: `GEUVADIS.hg38.chr22.*`
+
+*Problem 1*
+
+How many covariates are in the example data?
+
+## Compute nominal p-value in cis-eQTL analysis
+
+Nominal p-value is the observed p-value under linear model $\tilde{Y} \sim X$, where $\tilde{Y}$ is residual expression level after regressing out covariates and $X$ is the genotype dosage of a variant of interest.
+
+Let's compute nomimal p-value for all cis-eQTL candidates. 
+Here we define cis-window as 10kb surrounding TSS (both sides). 
+```{bash, eval=FALSE}
+# request a computing node and work interactively
+sinteractive --account=hgen47100 --ntasks-per-node=1 --mem-per-cpu=8G  
+
+# load python
+module load python
+
+# load dependencies for tensorqtl 
+conda activate /project2/hgen47100/software/conda_env/tensorqtl
+
+cd lab6
+
+mkdir output
+
+python /project2/hgen47100/software/tensorqtl/tensorqtl/tensorqtl.py \
+  --covariates /project/hgen47100/class_2023/data/lab6/GEUVADIS.445_samples.covariates.txt \
+  --window 10000 \
+  --mode cis_nominal \
+  /project/hgen47100/class_2023/data/lab6/GEUVADIS.hg38.chr22 \
+  /project/hgen47100/class_2023/data/lab6/GEUVADIS.chr22.expression.bed.gz \
+  output/cis_nominal
+```
+
+*Problem 2*
+
+From the logging message of tensorqtl run, how many genes are being analyzed? 
+
+The output contains all variant/gene pairs being test regardless of significance. 
+So, it will be huge amount of data in practice. 
+The output file is in `parquet` format, which is a binary format but it gives better I/O performance as comparing to human-readable text file. 
+We've provided a tiny python script to convert `parquet` file to text table in `txt.gz`.
+
+```{bash, eval=FALSE}
+python /project2/hgen47100/software/parquet2table.py \
+  --parquet output/cis_nominal.cis_qtl_pairs.chr22.parquet \
+  --output output/cis_nominal.cis_qtl_pairs.chr22.txt.gz
+```
+
+*Problem 3*
+
+How many variant/gene pairs are being tested and reported?
+
+*Problem 4*
+
+Which genes has the strongest association?
+
+
+## Perform cis-eQTL analysis with adaptive permutation
+
+If we'd like to identify eGene (gene that is significantly regulated by genetic variation), like we've mentioned above, we need to perform permutation to obtain gene-level p-value. 
+Here is how it can be done using `tensorqtl`.
+
+```{bash, eval=FALSE}
+python /project2/hgen47100/software/tensorqtl/tensorqtl/tensorqtl.py \
+  --covariates /project/hgen47100/class_2023/data/lab6/GEUVADIS.445_samples.covariates.txt \
+  --window 10000 \
+  --mode cis \
+  /project/hgen47100/class_2023/data/lab6/GEUVADIS.hg38.chr22 \
+  /project/hgen47100/class_2023/data/lab6/GEUVADIS.chr22.expression.bed.gz \
+  output/cis
+```
+
+
+The output is the gene-level statistics obtained from adaptive permutation where each row is for one gene (in txt.gz format).
+To obtain eGene as FDR 10%, we can collect all genes with `qval` smaller than 0.1. 
+To obtain cis-eQTL for these eGenes, we can collect all variant/gene pairs with `pval_nominal` (reported in `cis_nominal` run) smaller than `pval_nominal_threshold`.
+
+*Problem 5*
+
+Which gene has the most significant q-value?
+
+Note, it is possible your own cis output file might lack the q-value column (column 18, called "qval") and pval_nominal_threshold information, if this is the case, simply use the pre-computed `pre_run.cis_qtl.txt` in the data folder.
+
+*Problem 6*
+
+Select a gene with q-value < 0.05, visualize its cis-eQTL results by plotting $-\log(p)$
+on y-axis and distance to TSS on x-axis. And put a horizontal line indicating the corresponding `pval_nominal_threshold` of the gene.
+
+
+**References**:
+
+Ongen, Halit, Alfonso Buil, Andrew Anand Brown, Emmanouil T Dermitzakis, and Olivier Delaneau. 2016. “Fast and Efficient Qtl Mapper for Thousands of Molecular Phenotypes.” Bioinformatics 32 (10). Oxford University Press: 1479–85.
+
+Shabalin, Andrey A. 2012. “Matrix eQTL: Ultra Fast eQTL Analysis via Large Matrix Operations.” Bioinformatics 28 (10). Oxford University Press: 1353–8.
+
+Taylor-Weiner, Amaro, François Aguet, Nicholas J Haradhvala, Sager Gosai, Shankara Anand, Jaegil Kim, Kristin Ardlie, Eliezer M Van Allen, and Gad Getz. 2019. “Scaling Computational Genomics to Millions of Individuals with Gpus.” Genome Biology 20 (1). BioMed Central: 1–5.
