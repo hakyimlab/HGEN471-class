@@ -1,0 +1,236 @@
+---
+title: "Lab 7: S-LDSC"
+date: "Fri Feb 23 2024" 
+categories: [midway, Posit cloud]
+---
+
+:::{.callout-note}
+*Created by Festus Nyasimi, modified by Ethan Zhong.*
+*Modified by Temi Adeluwa for Winter 2024*
+:::
+
+
+## Introduction
+
+In this exercise, you will use stratified LD score regression (S-LDSC) to partition heritability for GWAS phenotypes from UK Biobank.
+
+Below is a step by step guide on setting up and running the analysis. First, **log in to Midway3 with your account**:
+
+```{bash, eval=FALSE}
+ssh <cnetid>@midway3.rcc.uchicago.edu
+cd /project/hgen47100/class_2024/users/<your_directory>/lab7
+```
+
+## Installing LDSC
+
+We start by installing LDSC. Detailed instructions can be found [here](https://github.com/bulik/ldsc).
+
+```{bash, eval=FALSE}
+module load python/anaconda-2022.05
+git clone https://github.com/bulik/ldsc.git
+cd ldsc
+conda env remove -n ldsc # this removes the environment if it exists, but if you don't want to, you may skip this
+conda env create --file environment.yml
+
+srun --partition=caslake --mem=8G --ntasks=1 --account=hgen47100 --pty bash
+
+module load python/anaconda-2022.05
+source activate ldsc
+
+# test if set up is done
+./ldsc.py -h
+./munge_sumstats.py -h
+
+```
+If these commands fail with an error, then something has gone wrong during the installation process.
+
+## Format summary statistics
+
+Before running analysis with LDSC, we need to first reformat input summary statistics. This step is sometimes called munging.
+
+```{bash, eval=FALSE}
+mkdir output
+
+# make sure you use the right paths; I don't know beforehand where you might have installed the ldsc software
+python ./munge_sumstats.py \
+--sumstats /project/hgen47100/class_2024/data/lab7/GIANT_BMI_Speliotes2010_publicrelease_HapMapCeuFreq.txt \
+--merge-alleles /project/hgen47100/class_2024/data/lab7/w_hm3.snplist \
+--chunksize 50000 \
+--out ./output/BMI \
+--a1-inc
+
+```
+
+## Partition heritability
+
+S-LDSC partition heritability into different annotation categories by fitting the following model:
+
+$$\Large E \left [X_{j}^{2} \right] = \Large N \sum_{C}\tau_{C} \ell(j,C) + Na + 1 \tag{1}$$
+
+Here, $N$ is the sample size; $C$ indexes annotation categories; $\ell(j,C)$ is the LD score of SNP $j$ with respect to category $C$, defined as $\ell(j,C) = \sum_{k \in C} r_{jk}^2$; $a$ is a term that measures the contribution of confounding biases; $\tau_{C}$ represents the per-SNP contribution to heritability of category $C$.
+
+Unlike the original LDSC, where ld score is calculated using all the SNPs and the regression has a single predictor, in stratified LDSC we regress against ld scores from multiple categories and that helps us estimate the contribution to heritability from each category.
+
+S-LDSC is implemented as part of the `ldsc` software. To run S-LDSC, we need to provide the following infomation through command line arguments:
+
+* **--w-ld-chr**: the sum of LD scores over all input SNPs (i.e., the SNPs for which you have Z-scores). The total LD scores are just used for weighting the regression (hence the "w") and generally do not have a huge impact on the results.
+
+* **--ref-ld-chr**: a list of LD scores, one for each annotation category. The developers of S-LDSC also provide a baseline model that contains 53 (overlapping) functional categories.
+
+* **--frqfile-chr**: allele frequency information. `ldsc` only uses SNPs with MAF > 5%.
+
+* **--overlap-annot**: a flag that tells `ldsc` the input annotation categories overlap with each other.
+
+```{bash, eval=FALSE}
+# make sure you use the right paths; I don't know beforehand where you might have installed the ldsc software
+
+python ./ldsc.py \
+    --h2 /project/hgen47100/class_2024/data/lab7/BMI.sumstats.gz \
+    --ref-ld-chr /project/hgen47100/class_2024/data/lab7/baseline/baseline. \
+    --w-ld-chr /project/hgen47100/class_2024/data/lab7/weights_hm3_no_hla/weights. \
+    --overlap-annot \
+    --frqfile-chr /project/hgen47100/class_2024/data/lab7/1000G_frq/1000G.mac5eur. \
+    --out ./output/BMI_baseline
+
+```
+
+## Visualize the partitioned heritability
+
+We can use the following code to visualize the results. **Move BMI_baseline.results to your local machine and run the following R code.**
+
+```{r, eval=FALSE}
+library(data.table)
+library(tidyverse)
+
+dir <- ""  # specify your own directory
+
+h2 <- paste0(dir, '/BMI_baseline.results')
+
+h2 <- fread(h2)
+
+# barplot
+h2 %>% arrange(desc(Prop._h2)) %>% 
+  mutate(Category = str_remove(Category, "_0")) %>% 
+  mutate(Category = factor(Category, level = Category)) %>% 
+  pivot_longer(.,cols = c(Prop._SNPs,Prop._h2),names_to = "Proportion") %>% 
+  ggplot(., aes(x=Category, y=value)) + 
+  geom_bar(aes(fill = Proportion),stat = "identity",position = "dodge") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  ggtitle("Proportion of h2 explained and snps used by each category") +
+  ylab("proportion") + xlab("Category")
+
+# enrichment plot
+h2 %>% mutate(Category = str_remove(Category, "_0")) %>% 
+  ggplot(., aes(x=Category, y=-log10(Enrichment_p))) +
+  geom_hline(yintercept=-log10(0.05/nrow(h2)),linetype=2) +
+  geom_bar(stat = "identity",position = "dodge") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + 
+  ggtitle("Enrichment of different categories") +
+  ylab("-log10(p)") + xlab("Category") +
+  coord_flip() 
+  
+
+```
+
+The dotted line shows the Bonferonni significance at $\alpha$ cut off of 0.05.
+
+## Estimating proportion of heritability by cell-type group
+
+Now we run a cell type specific analysis to prioritize relevant cell types and estimate proportion of heritability attribute to different cell types. We will run three cell type groups: CNS, Skeletal Muscle, and Immune.
+
+```{bash, eval=FALSE}
+# CNS
+python ../software/ldsc/ldsc.py \
+    --h2 /project/hgen47100/class_2024/data/lab7/BMI.sumstats.gz \
+    --ref-ld-chr /project/hgen47100/class_2024/data/lab7/cell_type_groups/CNS.,/project/hgen47100/class_2024/data/lab7/baseline/baseline. \
+    --w-ld-chr /project/hgen47100/class_2024/data/lab7/weights_hm3_no_hla/weights. \
+    --overlap-annot \
+    --print-coefficients \
+    --frqfile-chr /project/hgen47100/class_2024/data/lab7/1000G_frq/1000G.mac5eur. \
+    --out ./output/BMI_CNS
+
+# Skeletal Muscle
+python ../software/ldsc/ldsc.py \
+    --h2 /project/hgen47100/class_2024/data/lab7/BMI.sumstats.gz \
+    --ref-ld-chr /project/hgen47100/class_2024/data/lab7/cell_type_groups/SkeletalMuscle.,project/hgen47100/class_2024/data/lab7/baseline/baseline. \
+    --w-ld-chr project/hgen47100/class_2024/data/lab7/weights_hm3_no_hla/weights. \
+    --overlap-annot \
+    --print-coefficients \
+    --frqfile-chr project/hgen47100/class_2024/data/lab7/1000G_frq/1000G.mac5eur. \
+    --out ./output/BMI_SkeletalMuscle
+
+# Immune
+python ./ldsc.py \
+    --h2 project/hgen47100/class_2024/data/lab7/BMI.sumstats.gz \
+    --ref-ld-chr project/hgen47100/class_2024/data/lab7/cell_type_groups/Immune.,project/hgen47100/class_2024/data/lab7/baseline/baseline. \
+    --w-ld-chr project/hgen47100/class_2024/data/lab7/weights_hm3_no_hla/weights. \
+    --overlap-annot \
+    --print-coefficients \
+    --frqfile-chr project/hgen47100/class_2024/data/lab7/1000G_frq/1000G.mac5eur. \
+    --out ./output/BMI_Immune
+
+```
+
+## Visualize h2 estimate by cell type
+
+```{r, eval=FALSE}
+dir <- ""
+
+cns <- paste0(dir, '/BMI_CNS.results')
+ske <- paste0(dir, '/BMI_SkeletalMuscle.results')
+immune <- paste0(dir, '/BMI_Immune.results')
+
+cns <- fread(cns)
+ske <- fread(ske)
+immune <- fread(immune)
+
+cns %>% dplyr::filter(Category == "CNS_0") %>% mutate(Cell_type = "CNS") %>% 
+  bind_rows(ske %>% dplyr::filter(Category == "SkeletalMuscle_0") %>% 
+              mutate(Cell_type = "SkeletalMuscle")) %>% 
+  bind_rows(immune %>% dplyr::filter(Category == "Immune_0") %>% 
+              mutate(Cell_type = "Immune")) %>% 
+  #mutate(Category = factor(Category, level = Category)) %>% 
+  ggplot(., aes(x=Category, y=Prop._h2)) + 
+  geom_bar(aes(fill = Cell_type),stat = "identity",position = "dodge") + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+```
+
+## Cell type-specific analysis
+
+A more efficient way to do cell type-specific analysis is using the `--h2-cts` flag.
+
+```{bash, eval=FALSE}
+# Reference: https://www.jneurosci.org/content/28/1/264
+python ./ldsc.py \
+  --h2-cts project/hgen47100/class_2024/data/lab7/BMI.sumstats.gz \
+  --ref-ld-chr project/hgen47100/class_2024/data/lab7/1000G_EUR_Phase3_baseline/baseline. \
+  --out ./output/BMI_Cahoy \
+  --ref-ld-chr-cts project/hgen47100/class_2024/data/lab7/Cahoy.ldcts \
+  --w-ld-chr project/hgen47100/class_2024/data/lab7/weights_hm3_no_hla/weights.
+
+```
+
+## Visualize the cell specific analyses results
+
+```{r, eval=FALSE}
+dir <- ""
+
+cts <- paste0(dir, '/BMI_Cahoy.cell_type_results.txt')
+
+cts <- fread(cts)
+cts
+ggplot(data = cts, aes(x = Name, y = -log10(Coefficient_P_value))) + 
+  geom_point(aes(color = Name))
+```
+
+## Assignment
+
+Select a brain-related phenotype from this [list](https://nealelab.github.io/UKBB_ldsc/downloads.html#ldsc_sumstat_files) and download the pre-processed GWAS summary statistics. Run the following analysis:
+
+  1. Partition heritability using the baseline model.\
+  2. Estimating proportion of heritability explained by the three cell types above.\
+  3. Run cell type-specific analysis using the Cahoy dataset.\
+  4. Visualize results for analysis 1 - 3.
+
+

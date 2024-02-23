@@ -1,0 +1,126 @@
+---
+title: "Lab 7: S-PrediXcan"
+date: "Fri Feb 23 2024" 
+categories: [midway, Posit cloud]
+---
+
+:::{.callout-note}
+*Created by Yanyu Liang, with some material adapted from Charles Washington III and Jiamao Zheng's lab 6 from 2018, modified by Jing Gu and Ethan Zhong.*
+*Modified by Temi Adeluwa for Winter 2024*
+:::
+
+PrediXcan is a gene-based association method that directly tests the molecular mechanisms through which genetic variation affects a phenotype. 
+
+S-PrediXcan is an extension of PrediXcan that infers PrediXcan's results using only GWAS summary statistics and LD reference panel. The software can be found at the [MetaXcan repo](https://github.com/hakyimlab/MetaXcan).
+
+In this lab, we will see how to run a S-PrediXcan analysis.
+
+By the end of the lab you should be able to:
+
+- **Understand the types of files required for S-PrediXcan**  
+- **Interpret the results of S-PrediXcan analysis**  
+
+# Setup
+
+First, let's setup everything we need on RCC. Today's lab will be on Midway3. **Log in to Midway3 with your account.**
+```{bash, eval=FALSE}
+ssh <cnetid>@midway3.rcc.uchicago.edu
+```
+
+Request a computing node and work interactively:
+```{bash, eval=FALSE}
+srun --partition=caslake --mem=8G --ntasks=1 --account=hgen47100 --pty bash
+
+# copy lab7 folder into your directory 
+cp -r /project/hgen47100/class_2024/data/lab7 /project/hgen47100/class_2024/users/<your_directory>
+cd /project/hgen47100/class_2023/<your_directory>/lab7
+mkdir output
+```
+
+# S-PrediXcan analysis
+
+To recap, S-PrediXcan analysis takes GWAS summary statistics, gene expression prediction models (weights for SNPs), and reference LD and provides gene-level association between predicted expression and trait. 
+
+So, it requires the following three pieces of data:  
+1. GWAS summary statistics  
+2. Expression prediction model (available through [http://predictdb.org/](http://predictdb.org/))  
+3. Reference LD (also from [http://predictdb.org/](http://predictdb.org/))  
+  
+The complete analysis workflow is:\
+1. Pick a expression prediction model (dataset, population, tissue).\
+2. Harmonize the GWAS so that it works on the same set of variants as expression prediction model (it may require imputation of GWAS). More details can be found [here](https://github.com/hakyimlab/MetaXcan/wiki/Tutorial:-GTEx-v8-MASH-models-integration-with-a-Coronary-Artery-Disease-GWAS).\
+3. Run SPrediXcan script.
+
+One caveat is that we need to make sure that the GWAS and prediction model are based on the same population. 
+
+Here we provide expression prediction models stored in a SQLite file with extension `*.db` which were built from GTEx V8 data. 
+And these variants are called and labelled specifically by GTEx V8 data.
+And reference LD meaning the covariances between SNPs is in the same folder with extension `*.txt.gz`.
+Luckily we have GWAS results harmonized to GTEx V8 by Alvaro Barbeira at [here](https://uchicago.box.com/s/tkoya2h769hyvs8e2texokpsw8qqoop3).  
+
+As an example, let's pick tissue "Whole_Blood" and GWAS "UKB_20002_1223_self_reported_type_2_diabetes".
+
+```{bash}
+# load python
+# module load python
+
+# load a conda environment so that you can use conda
+python/anaconda-2023.09
+
+# activate the environment
+conda activate /project/hgen47100/class_2024/software/imlabtools
+
+```
+
+
+```{bash, eval=FALSE}
+python /project/hgen47100/software/MetaXcan/software/SPrediXcan.py \
+--model_db_path mashr_Whole_Blood.db \
+--model_db_snp_key varID \
+--covariance mashr_Whole_Blood.txt.gz \
+--gwas_file UKB_20002_1223_self_reported_type_2_diabetes.txt.gz \
+--snp_column panel_variant_id \
+--effect_allele_column effect_allele \
+--non_effect_allele_column non_effect_allele \
+--zscore_column zscore \
+--pvalue_column pvalue \
+--keep_non_rsid \
+--output_file output/spredixcan_UKB_20002_1223_self_reported_type_2_diabetes.csv
+```
+
+Taken from the github page, each output file is a CSV, with each row containing a gene association at a given trait-tissue combination:
+
+* gene: ENSEMBLE ID or intron id
+* gene_name: HUGO name or intron id
+* zscore: predicted association z-score
+* effect_size: estimated effect size
+* pvalue: association p-value
+* var_g: estimated variance of predicted expression or splicing
+* pred_perf_r2: prediction model cross-validated performance
+* pred_perf_pval: prediction model cross-validated performance
+* pred_perf_qval: deprecated, empty field left for compatibility
+* n_snps_used: number of snps in the intersection of GWAS and model
+* n_snps_in_cov: number of snps in the LD compilation
+* n_snps_in_model: number of snps in the model
+* best_gwas_p: smallest p-value acros GWAS snps used in this model
+* largest_weight: largest prediction model weight
+
+
+*Problem 1*: 
+
+Which gene is the most significant? Hint: first filter out lines with NAs in p-value columns and then sort by numerical values.
+
+*Problem 2*:
+
+Repeat the same analysis but with liver tissue. Show your command.
+
+*Problem 3*:
+
+Visualize the results from two tissues by QQ-plot. Plot $\log(p)$ where expected p-values on x-axis, and observed p-values on y-axis, and color the two tissues differently.
+
+
+**References**
+
+Barbeira, Alvaro N, Scott P Dickinson, Rodrigo Bonazzola, Jiamao Zheng, Heather E Wheeler, Jason M Torres, Eric S Torstenson, et al. 2018. “Exploring the Phenotypic Consequences of Tissue Specific Gene Expression Variation Inferred from Gwas Summary Statistics.” Nature Communications 9 (1). Nature Publishing Group: 1–20.
+
+Gamazon, Eric R, Heather E Wheeler, Kaanan P Shah, Sahar V Mozaffari, Keston Aquino-Michaels, Robert J Carroll, Anne E Eyler, et al. 2015. “A Gene-Based Association Method for Mapping Traits Using Reference Transcriptome Data.” Nature Genetics 47 (9). Nature Publishing Group: 1091.
